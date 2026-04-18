@@ -3,7 +3,7 @@
   "name": "Litruv Test Plugin",
   "version": "1.0.0",
   "description": "A test plugin for JollyRipper that demonstrates basic functionality.",
-  "author": "Litruv",
+  "author": "litruv",
   "repository": "https://github.com/Litruv/JollyRipper-Plugin-Example",
   "homepage": "https://github.com/Litruv/JollyRipper-Plugin-Example",
   "thumbnail": "https://raw.githubusercontent.com/Litruv/JollyRipper-Plugin-Example/main/thumbnail.png",
