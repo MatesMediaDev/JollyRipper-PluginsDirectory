@@ -6,6 +6,6 @@
   "author": "litruv",
   "repository": "https://github.com/Litruv/JollyRipper-Plugin-Example",
   "homepage": "https://github.com/Litruv/JollyRipper-Plugin-Example",
-  "thumbnail": "https://raw.githubusercontent.com/Litruv/JollyRipper-Plugin-Example/main/thumbnail.png",
+  "thumbnail": "https://github.com/litruv/JollyRipper-Plugin-Example/blob/master/thumbnail.png?raw=true",
   "tags": ["example", "test"]
 }
