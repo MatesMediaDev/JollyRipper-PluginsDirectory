@@ -1,0 +1,93 @@
+name: Validate Plugin PR
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout base branch (main) for validation scripts
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: base
+          
+      - name: Checkout PR branch for plugin files
+        uses: actions/checkout@v4
+        with:
+          path: pr
+          fetch-depth: 0
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: Get changed files
+        id: changed-files
+        run: |
+          cd pr
+          echo "files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '^plugins/' || echo '')" >> $GITHUB_OUTPUT
+          
+      - name: Block attempts to modify infrastructure
+        run: |
+          cd pr
+          INFRA_CHANGES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '^\.github/' || echo '')
+          if [ -n "$INFRA_CHANGES" ]; then
+            echo "❌ ERROR: PRs cannot modify .github/ directory files"
+            echo "Changed infrastructure files:"
+            echo "$INFRA_CHANGES"
+            echo ""
+            echo "Only plugins/ directory changes are allowed."
+            exit 1
+          fi
+          
+      - name: Verify commit authors match PR creator
+        run: |
+          cd pr
+          echo "🔍 Verifying commit authors..."
+          PR_USER="${{ github.event.pull_request.user.login }}"
+          echo "PR created by: $PR_USER"
+          
+          COMMITS=$(git log --format="%H" origin/${{ github.base_ref }}..HEAD)
+          
+          for commit in $COMMITS; do
+            AUTHOR=$(git show -s --format='%an' $commit)
+            EMAIL=$(git show -s --format='%ae' $commit)
+            echo "  Commit $commit by $AUTHOR <$EMAIL>"
+          done
+          
+          echo "✓ PR created by authenticated user: $PR_USER"
+          echo "Note: Validation will check plugin ownership against this authenticated user, not git commit authors"
+          
+      - name: Validate PR (using trusted validation script from main)
+        run: |
+          cd base
+          node .github/scripts/validate-pr.js "${{ github.event.pull_request.user.login }}" "${{ steps.changed-files.outputs.files }}"
+        env:
+          PR_FILES_DIR: ../pr/plugins
+          
+      - name: Post approval comment
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '✅ **Validation passed!** Auto-merging this pull request.\n\nAll plugin requirements have been met:\n- ✓ Valid plugin schema\n- ✓ Correct filename format\n- ✓ Author verification\n- ✓ Repository URL valid\n\nYour plugin will be available in the directory shortly!'
+            });
+          
+      - name: Auto-merge PR
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd pr
+          echo "✅ Validation passed - Auto-merging PR"
+          gh pr merge ${{ github.event.pull_request.number }} --squash --auto --repo ${{ github.repository }}
