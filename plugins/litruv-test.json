@@ -1,0 +1,11 @@
+{
+  "id": "litruv-test",
+  "name": "Litruv Test Plugin",
+  "version": "1.0.0",
+  "description": "A test plugin for JollyRipper that demonstrates basic functionality.",
+  "author": "litruv",
+  "repository": "https://github.com/Litruv/JollyRipper-Plugin-Example",
+  "homepage": "https://github.com/Litruv/JollyRipper-Plugin-Example",
+  "thumbnail": "https://i.imgur.com/9Ca3qub.png",
+  "tags": ["example", "test"]
+}
